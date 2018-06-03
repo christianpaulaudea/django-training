@@ -1,0 +1,79 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+	{{ title }}
+{% endblock %}
+
+{% block body %}
+	{% include 'includes/_navbar.html' %}
+
+	<div class="page-bg container-fluid fill-height">
+		<div class="container">
+			<div class="row" style="height: 60px;">
+				<div class="container">
+					<div class="row">
+						{{ user.username }}
+					</div>
+				</div>
+			</div>
+			<div class="row" style="height: 50px;"></div>
+				<div class="row">
+					<div class="col-md-1"></div>
+					<div class="col-md-4">
+						<form method="post">{% csrf_token %}
+							<div class="input-group">
+								<input type="text" name="search-key" class="form-control input-md" placeholder="search">
+								<span class="input-group-btn">
+									<button type="submit" class="btn btn-danger">
+										<span class="glyphicon glyphicon-search"></span>
+									</button>
+								</span>
+							</div>
+						</form>
+					</div>
+					<div class="col-md-6"></div>
+				</div>
+			<br/><br/>
+
+			<div class="row">
+				<div class="col-md-6 center-block">
+					<div class="panel panel-default panel-danger center-block" style="max-height: 460px; max-width: 550px">
+						<div class="panel-heading" style="background-color: #991212;border-color: #991212;">
+							<h3 class="panel-title"><font color="white">
+								{{ title }}
+								{% if user.is_authenticated %}
+									<a href="{% url add_url %}" style="color:white;">
+										<span class="span-button glyphicon glyphicon-plus"></span>
+									</a>
+								{% endif %}
+							</font></h3>
+						</div>
+						<div class="panel-body" style="padding:0px 0px">
+							<div id="locations" class="scrollbar pre-scrollable">
+								{% if list %}
+									{% for item in list %}
+										<a href="#"><li class="list-group-item choice-item">
+											{{ item }}
+											{% if user.is_authenticated %}
+												<a href="{% url delete_url pk=item.pk %}" style="color:black;">
+													<span class="span-button glyphicon glyphicon-remove"></span>
+												</a>
+												<a href="{% url edit_url pk=item.pk %}" style="color:black;">
+													<span class="span-button glyphicon glyphicon-edit"></span>
+												</a>
+											{% endif %}
+										</li></a>
+									{% endfor %}
+								{% else %}
+									<li class="list-group-item">nothing found</li>
+								{% endif %}	
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row" style="height: 40px;"></div>
+			<div class="container" style="min-height: 50px;"></div>
+		</div>
+	</div>
+{% endblock %}

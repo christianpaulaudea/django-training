@@ -1,0 +1,26 @@
+<nav class="navbar navbar-inverse">
+	<div class="container">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="{% url 'index' %}"><font color="#e5e0e0"><span class="glyphicon glyphicon-star"></span> Lists</font></a>
+		</div>
+
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav navbar-right">
+				<li><a href="{% url 'books' %}"><font color="#e5e0e0">Books</font></a></li>
+				<li><a href="{% url 'movies' %}"><font color="#e5e0e0">Movies</font></a></li>
+				<li><a href="{% url 'holidays' %}"><font color="#e5e0e0">Holidays</font></a></li>
+				{% if user.is_authenticated %}
+					<li><a href="{% url 'logout' %}"><font color="#e5e0e0">Logout</font></a></li>
+				{% else %}
+					<li><a href="{% url 'login' %}"><font color="#e5e0e0">Login</font></a></li>
+				{% endif %}
+			</ul>
+		</div>
+	</div>
+</nav>

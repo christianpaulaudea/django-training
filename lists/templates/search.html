@@ -1,0 +1,209 @@
+{% extends 'layout.html' %}
+
+{% block maphead %}
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script>L_PREFER_CANVAS = false; L_NO_TOUCH = false; L_DISABLE_3D = false;</script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.2.0/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.2.0/dist/leaflet.css" />
+{% endblock %}
+
+{% block title %}
+	{% if session['category'] %}
+		Diskover++ - {{ session['category'] }}
+	{% else %}
+		Diskover++ - Search Results
+	{% endif %}
+{% endblock %}
+
+{% block css_includes %}
+{% endblock %}
+
+{% block body %}
+	{% with dd_items = loc_categories %}
+	{% include 'includes/_navbar.html' %}
+	{% endwith %}
+	<div class="page-bg container-fluid fill-height">
+		<div class="container">
+			<!--
+			<div class="row" style="height: 60px;">
+				<div class="container">
+					<br/>
+					<h2><strong>
+						{% if session['category'] %}
+							{{ session['category'] }}
+						{% else %}
+							Search Results
+						{% endif %}
+					</strong></h2>
+				</div>
+			</div>
+			-->
+            <div class="row" style="height: 60px;">
+                    <div class="container">
+                        <br>
+                        <div class="row">
+                            {% if session['category'] %}
+                            <h1 id="header_name"><center><strong>{{ session['category'] }}</strong></center></h1>
+                            {% else %}
+                            <h1 id="header_name"><center><strong>Search Results</strong></center></h1>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+			<div class="row" style="height: 50px;"></div>
+                {% if session['category'] %}
+				<div class="row">
+					<div class="col-md-4"></div>
+					<div class="col-md-4">
+						<form action="{{ url_for('search') }}" method="post">
+							<div class="input-group">
+								<input type="text" id="search-field" name="search-key" class="form-control input-md" placeholder="Search within this category...">
+								<span class="input-group-btn">
+									<button type="submit" class="btn btn-danger">
+										<span class="glyphicon glyphicon-search"></span>
+									</button>	
+								</span>
+							</div>
+						</form>
+					</div>
+					<div class="col-md-4"></div>
+				</div>
+                {% endif %}
+			<br/><br/>
+
+			<div class="row">
+				<div class="col-md-6 center-block">
+					<div class="panel panel-default panel-danger center-block" style="max-height: 460px; max-width: 550px">
+						<div class="panel-heading" style="background-color: #991212;border-color: #991212;">
+							<h3 class="panel-title"><font color="white">
+								{% if session['category'] %}
+									Choose from {{ session['category'] }}
+									{% if session['admin'] %}
+										<span id="add-location" class="span-button glyphicon glyphicon-plus" title="Add a location in this category"></span>
+									{% endif %}
+								{% else %}
+									Choose a location
+								{% endif %}
+							</font></h3>
+						</div>
+						<div class="panel-body" style="padding:0px 0px">
+							<div id="locations" class="scrollbar pre-scrollable">
+								{% if locations %}
+									{% for location in locations %}
+										<a href="{{ url_for("locations", location_url=location.url) }}"><li class="location-item list-group-item choice-item" keys="{{ location.image }}">
+											{{ location.name }}
+											{% if session['admin'] %}
+												<span class="delete-location span-button glyphicon glyphicon-remove" keys="{{ location.name }}"></span>
+											{% endif %}
+										</li></a>
+									{% endfor %}
+								{% else %}
+									<li class="list-group-item">There are no results to display.</li>
+								{% endif %}	
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6 center-block">
+                    <div class="row">
+                    	<div class="panel panel-default panel-danger center-block" style="max-height: 460px; max-width: 550px">
+                        	<div class="panel-heading" style="background-color: #991212; border-color: #991212;">
+                                {% if session['category'] %}
+                            	<h3 class="panel-title"><font color="white">{{ session['category'] }} marked on the map</font></h3>
+                                {% else %}
+                                <h3 class="panel-title"><font color="white">Search results marked on the map</font></h3>
+                                {% endif %}
+                            </div>
+                        	<div class="panel-body" style="padding:0px 0px">
+                        		<div id="mapa">
+                        		</div>
+                        	</div>
+                    	</div>
+                    </div>
+                </div>
+				<!-- <div class="col-md-6 center-block">
+					<div class="container center-block">
+						<img id="location-preview" class="image-preview" src="{{ url_for('static', filename='images/locations/placeholder.jpg') }}">
+					</div>
+				</div> -->
+			</div>
+			<div class="row" style="height: 40px;"></div>
+			<div class="container" style="min-height: 50px;"></div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block js_includes %}
+    <script>
+        var corner1 = L.latLng(14.66494750674546,121.07759714126588);
+        var corner2 = L.latLng(14.645890244777918,121.05369329452516);
+        var bounds = L.latLngBounds(corner1, corner2);
+        var mapa = L.map(
+                        'mapa',
+                        {center: [14.65492,121.06488],
+                        zoom: 15,
+                        maxBounds: bounds,
+                        layers: [],
+                        worldCopyJump: false,
+                        crs: L.CRS.EPSG3857
+                        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    {"attribution": '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    "detectRetina": false,
+                    "maxZoom": 18,
+                    "minZoom": 15,
+                    "noWrap": false,
+                    "subdomains": "abc"}).addTo(mapa);
+
+        var schoolIcon = new L.Icon({iconUrl: "{{ url_for('static', filename='images/markers/schoolIcon.png') }}",
+                                shadowUrl: "{{ url_for('static', filename='images/markers/shadow.png') }}",
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]});
+        var foodIcon = new L.Icon({iconUrl: "{{ url_for('static', filename='images/markers/foodIcon.png') }}",
+                                shadowUrl: "{{ url_for('static', filename='images/markers/shadow.png') }}",
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]});
+        var parkingIcon = new L.Icon({iconUrl: "{{ url_for('static', filename='images/markers/parkingIcon.png') }}",
+                                shadowUrl: "{{ url_for('static', filename='images/markers/shadow.png') }}",
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]});
+        var toiletIcon = new L.Icon({iconUrl: "{{ url_for('static', filename='images/markers/toiletIcon.png') }}",
+                                shadowUrl: "{{ url_for('static', filename='images/markers/shadow.png') }}",
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]});
+        var defaultIcon = new L.Icon({iconUrl: "{{ url_for('static', filename='images/markers/defaultIcon.png') }}",
+                                shadowUrl: "{{ url_for('static', filename='images/markers/shadow.png') }}",
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]});
+
+        {% for point in locations %}
+          {% if point.category == "College Buildings" or point.category == "Rooms" %}
+            var marker = L.marker([{{ point.lat }}, {{ point.lng }}], {icon: schoolIcon}).addTo(mapa);
+          {% elif point.category == "Food Service" %}
+            var marker = L.marker([{{ point.lat }}, {{ point.lng }}], {icon: foodIcon}).addTo(mapa);
+          {% elif point.category == "Parking Lots" %}
+            var marker = L.marker([{{ point.lat }}, {{ point.lng }}], {icon: parkingIcon}).addTo(mapa);
+          {% elif point.category == "Comfort Rooms" %}
+            var marker = L.marker([{{ point.lat }}, {{ point.lng }}], {icon: toiletIcon}).addTo(mapa);
+          {% else %}
+            var marker = L.marker([{{ point.lat }}, {{ point.lng }}], {icon: defaultIcon}).addTo(mapa);
+          {% endif %}
+          
+          marker.bindPopup("<b>{{ point.name }}</b><br>", {closeButton:false});
+          marker.on('click', function CenterView(e) {mapa.setView(new L.LatLng({{ point.lat }},{{ point.lng }}), 17);})
+          marker.on('mouseover', function MarkerHover(e) {this.openPopup()});
+          marker.on('mouseout', function MarkerOut(e) {this.closePopup()});
+        {% endfor %}
+    </script>
+	<!-- <script type="text/javascript" src="{{ url_for('static', filename='js/search.js') }}"></script> -->
+{% endblock %}

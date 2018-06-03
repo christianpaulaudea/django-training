@@ -1,0 +1,290 @@
+{% extends 'layout.html' %}
+
+{% block maphead %}
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script>L_PREFER_CANVAS = false; L_NO_TOUCH = false; L_DISABLE_3D = false;</script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.2.0/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.2.0/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+{% endblock %}
+
+{% block title %}
+	Diskover++ - {{ location.name }}
+{% endblock %}
+
+{% block body %}
+	{% with dd_items = loc_categories %}
+	{% include 'includes/_navbar.html' %}
+    {% endwith %}
+    <div class="page-bg container-fluid fill-height" id="homecont">
+        <div class="container">
+            <div class="row">
+                <div class="row" style="height: 60px;">
+                    <div class="container">
+                        <br>
+                        <div class="row">
+                            <h1 id="header_name"><center><strong>{{ location.name.upper() }}</strong></center></h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row" style="height: 50px;"></div>
+                <div class="col-md-6 center-block">
+                    <div class="row">
+                            <!-- <div class="container center-block img-container text-center" style="max-height: 460px; max-width: 550px">
+                                <img class="img-responsive img-thumbnail" src="{{ url_for('static', filename='images/locations/'+location.image) }}">
+                            </div> -->
+                            <div class="container center-block img-container text-center" style="max-height: 460px; max-width: 550px">
+                                <div id="myCarousel" class="carousel slide" data-ride="carousel">
+
+                                  <ol class="carousel-indicators">
+                                    <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+                                    {% for image in images[1:] %}
+                                    <li data-target="#myCarousel" data-slide-to="{{ loop.index }}"></li>
+                                    {% endfor %}
+                                  </ol>
+
+                                  <div class="carousel-inner">
+                                    <div class="item active">
+                                        <img src="{{ images[0].image }}" alt="Testing">
+                                        <div class="carousel-caption">
+                                            <h4>{{ images[0].location }}</h4>
+                                        </div>
+                                    </div>
+                                    {% for image in images[1:] %}
+                                    <div class="item">
+                                        <img src="{{ image.image }}" alt="Testing">
+                                        <div class="carousel-caption">
+                                            <h4>{{ image.location }}</h4>
+                                        </div>   
+                                    </div>
+                                    {% endfor %}
+                                  </div>
+
+                                  <a class="left carousel-control" href="#myCarousel" data-slide="prev">
+                                    <span class="glyphicon glyphicon-chevron-left"></span>
+                                    <span class="sr-only">Previous</span>
+                                  </a>
+                                  <a class="right carousel-control" href="#myCarousel" data-slide="next">
+                                    <span class="glyphicon glyphicon-chevron-right"></span>
+                                    <span class="sr-only">Next</span>
+                                  </a>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+                <div class="col-md-6 center-block">
+                    <div class="row">
+                        <div class="panel panel-default panel-danger center-block" style="max-height: 460px; max-width: 550px">
+                            <div class="panel-heading" style="background-color: #991212;border-color: #991212;">
+                                <h3 class="panel-title"><font color="white">Route from starting pin (draggable) to {{ location.name }}</font></h3>
+                            </div>
+                            <div class="panel-body" style="padding:0px 0px;">
+                                <div id="mapa"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+            <div class="row" style="height: 25px;"></div>
+            <div class="row">
+                    <div class="col-md-6 center-block">
+                        <div class="row">
+                            <div class="panel panel-default panel-danger center-block" style="max-height: 460px; max-width: 550px">
+                                <div class="panel-heading" style="background-color: #991212;border-color: #991212;">
+                                    <h3 class="panel-title">
+                                        <font color="white">Description</font>
+                                        {% if session['admin'] %}
+                                            <span class="span-button"><button id="desc-edit" class="btn btn-xs btn-primary">Edit</button></span>
+                                            <span class="span-button"><button id="desc-cancel" class="btn btn-xs btn-danger">Cancel</button></span>
+                                            <span class="span-button"><button id="desc-save" class="btn btn-xs btn-success">Save</button></span>
+                                        {% endif %}
+                                    </h3>
+                                </div>
+                                <div class="panel-body bg-danger info-panel">
+                                    <p id="desc-p" class="should-be-black text-justify">{{ location.description }}</p>
+                                    <textarea id="desc-field" rows="5" cols="69"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 center-block">
+                        <div class="row">
+                            <div class="panel panel-default panel-danger center-block" style="max-height: 460px; max-width: 550px">
+                                <div class="panel-heading" style="background-color: #991212;border-color: #991212;">
+                                    <h3 class="panel-title">
+                                        <font color="white">Where is it located?</font>
+                                        {% if session['admin'] %}
+                                            <span class="span-button"><button id="where-edit" class="btn btn-xs btn-primary">Edit</button></span>
+                                            <span class="span-button"><button id="where-cancel" class="btn btn-xs btn-danger">Cancel</button></span>
+                                            <span class="span-button"><button id="where-save" class="btn btn-xs btn-success">Save</button></span>
+                                        {% endif %}
+                                    </h3>
+                                </div>
+                                <div class="panel-body bg-danger info-panel">
+                                    <p id="where-p" class="should-be-black text-justify">{{ location.moreInfo }}</p>
+                                    <textarea id="where-field" rows="5" cols="69"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            
+            {% if rooms %}
+            <div class="row">
+                <!-- <div class="row" style="height: 50px;"></div> -->
+                <div class="col-md-6 center-block">
+                    <div class="row">
+                        <div class="panel panel-default panel-danger center-block" style="max-height: 460px; max-width: 550px">
+                            <div class="panel-heading" style="background-color: #991212;border-color: #991212;">
+                                <h3 class="panel-title"><font color="white">Rooms</font></h3>
+                            </div>
+                            <div class="panel-body" style="padding:0px 0px;">
+                                <div class="scrollbar pre-scrollable">
+                                    {% for room in rooms %}
+                                        <a href="{{ url_for('locations', location_url=room.url) }}"><li class="room-item list-group-item choice-item" keys="{{ room.image }}">{{ room.name }}</li></a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 center-block">
+                    <div class="row">
+                            <div class="container center-block img-container text-center" style="max-height: 460px; max-width: 550px">
+                                <img id="room-preview" class="image-preview img-responsive img-thumbnail" src="/static/images/placeholder.jpg">
+                            </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if related %}
+            <div class="row" style="height:25px"></div>
+            <div class="row">
+                <div class="col-md-6 center-block">
+                    <div class="row">
+                        <div class="panel panel-default panel-danger center-block" style="max-height: 460px; max-width: 550px">
+                            <div class="panel-heading" style="background-color: #991212;border-color: #991212;">
+                                <h3 class="panel-title"><font color="white">Nearby locations</font></h3>
+                            </div>
+                            <div class="panel-body" style="padding:0px 0px;">
+                                <div class="scrollbar pre-scrollable">
+                                    {% for r in related %}
+                                        <a href="{{ url_for('locations', location_url=r.url) }}"><li class="related-item list-group-item choice-item" keys="{{ r.image }}">{{ r.name }} ({{ r.category }})</li></a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 center-block">
+                    <div class="row">
+                            <div class="container center-block img-container text-center" style="max-height: 460px; max-width: 550px">
+                                <img id="related-preview" class="image-preview img-responsive img-thumbnail" src="/static/images/placeholder.jpg">
+                            </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+		<div class="row" style="height:50px"></div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block js_includes %}
+	<script>
+        var corner1 = L.latLng(14.66494750674546,121.07759714126588);
+        var corner2 = L.latLng(14.645890244777918,121.05369329452516);
+        var bounds = L.latLngBounds(corner1, corner2);
+        var mapa = L.map(
+                        'mapa',
+                        {center: [{{ location.lat }},{{ location.lng }}],
+                        zoom: 15,
+                        maxBounds: bounds,
+                        layers: [],
+                        worldCopyJump: false,
+                        crs: L.CRS.EPSG3857
+                        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    {"attribution": '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    "detectRetina": false,
+                    "maxZoom": 18,
+                    "minZoom": 15,
+                    "noWrap": false,
+                    "subdomains": "abc"}).addTo(mapa);
+
+        {% if location.category == "College Buildings" or location.category == "Rooms" %}
+        var markerIconPath = "{{ url_for('static', filename='images/markers/schoolIcon.png') }}";
+        var routeIconPath = "{{ url_for('static', filename='images/markers/schoolRouteIcon.png') }}";
+        var lineColor = 'dodgerblue';
+        {% elif location.category == "Food Service" %}
+        var markerIconPath = "{{ url_for('static', filename='images/markers/foodIcon.png') }}";
+        var routeIconPath = "{{ url_for('static', filename='images/markers/foodRouteIcon.png') }}";
+        var lineColor = 'firebrick';
+        {% elif location.category == "Parking Lots" %}
+        var markerIconPath = "{{ url_for('static', filename='images/markers/parkingIcon.png') }}";
+        var routeIconPath = "{{ url_for('static', filename='images/markers/parkingRouteIcon.png') }}";
+        var lineColor = 'purple';
+        {% elif location.category == "Comfort Rooms" %}
+        var markerIconPath = "{{ url_for('static', filename='images/markers/toiletIcon.png') }}";
+        var routeIconPath = "{{ url_for('static', filename='images/markers/toiletRouteIcon.png') }}";
+        var lineColor = 'coral';
+        {% else %}
+        var markerIconPath = "{{ url_for('static', filename='images/markers/defaultIcon.png') }}";
+        var routeIconPath = "{{ url_for('static', filename='images/markers/defaultRouteIcon.png') }}";
+        var lineColor = 'firebrick';
+
+        {% endif %}
+        var iconShadowPath = "{{ url_for('static', filename='images/markers/shadow.png') }}";
+
+        var markerIcon = new L.Icon({iconUrl: markerIconPath,
+                                shadowUrl: iconShadowPath,
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]});
+        var routeIcon = new L.Icon({iconUrl: routeIconPath,
+                                shadowUrl: iconShadowPath,
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]});
+
+        var startMarker = L.marker([14.65489179018266, 121.06487542390826], {icon: routeIcon, draggable: true});
+        startMarker.bindPopup("Drag me!", {closeButton:false});
+        startMarker.on('mouseover', function MarkerHover(e) {this.openPopup()});
+        startMarker.on('mouseout', function MarkerOut(e) {this.closePopup()});
+
+        var marker = L.marker([{{ location.lat }},{{ location.lng }}], {icon: markerIcon});
+        marker.bindPopup("<b>{{ location.name }}</b><br>", {closeButton:false});
+        marker.on('click', function CenterView(e) {mapa.setView(new L.LatLng({{ location.lat }},{{ location.lng }}), 17);})
+        marker.on('mouseover', function MarkerHover(e) {this.openPopup()});
+        marker.on('mouseout', function MarkerOut(e) {this.closePopup()});
+
+        var routingControl = L.Routing.control({
+            waypoints: [
+                L.latLng(14.65489179018266, 121.06487542390826),
+                L.latLng({{ location.lat }}, {{ location.lng }})
+            ],
+            lineOptions: {
+                styles: [{color: lineColor, opacity: 1, weight: 4}]
+            },
+            routeWhileDragging: true,
+            createMarker: function(i, wp, nWaypoints) {
+                if (i === 0) {
+                    // return L.marker(wp.latLng, {icon: routeIcon , draggable: this.draggableWaypoints});
+                    return startMarker;
+                } else {
+                    return marker;
+                }
+            }
+        });
+        routingControl.addTo(mapa);
+            
+    </script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/location.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,13 @@
+.choice-item:hover {
+	background-color: rgba(209, 209, 209, 0.5);
+}
+
+.span-button {
+	float: right;
+	cursor: pointer;
+}
+
+.header_name {
+	color: #962b2b;
+	text-shadow: 1px 1px 1px #000000;
+}
